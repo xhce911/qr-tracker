@@ -1,12 +1,17 @@
 import React, { useState, useRef } from 'react';
-import {QRCodeSVG} from 'qrcode.react';
-import { Button, Input, Card, Alert } from '@heroui/react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Button, Input, Card } from '@heroui/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import {  Dropdown,  DropdownTrigger,  DropdownMenu,  DropdownSection,  DropdownItem} from "@heroui/dropdown";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from '@heroui/react';
 import { HiDownload, HiOutlinePhotograph, HiOutlineCode } from 'react-icons/hi';
 
-const QRGenerator = () => {
+const QRGenerator = ({ user }) => {
   const [url, setUrl] = useState('');
   const [qrData, setQrData] = useState(null);
   const [error, setError] = useState('');
@@ -14,28 +19,34 @@ const QRGenerator = () => {
   const qrRef = useRef(null);
 
   const generateQR = async () => {
-    if (!url) {
-      setError('Por favor ingresa una URL válida');
+    if (!user) {
+      setError('Inicia sesión para crear códigos QR');
+      return;
+    }
+    const trimmed = url?.trim();
+    if (!trimmed) {
+      setError('Ingresa una URL');
       return;
     }
 
     try {
       setLoading(true);
-      // Guardar en Firestore
+      setError('');
       const docRef = await addDoc(collection(db, 'qrcodes'), {
-        originalUrl: url,
-        shortUrl: '', // Opcional: puedes acortar la URL
+        originalUrl: trimmed,
         createdAt: serverTimestamp(),
         scanCount: 0,
         lastScanned: null,
-        
+        createdBy: user.uid,
       });
 
+      const scanUrl = `${window.location.origin}/scan/${docRef.id}`;
       setQrData({
         id: docRef.id,
-        url: url
+        url: scanUrl,
+        originalUrl: trimmed,
+        scanCount: 0,
       });
-      setError('');
     } catch (err) {
       setError('Error al generar el QR: ' + err.message);
     } finally {
@@ -44,119 +55,122 @@ const QRGenerator = () => {
   };
 
   const downloadSVG = () => {
-    if (!qrRef.current) return;
-
+    if (!qrRef.current || !qrData) return;
     const svg = qrRef.current.querySelector('svg');
+    if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-
-    const downloadLink = document.createElement('a');
-    downloadLink.href = svgUrl;
-    downloadLink.download = `qr-code-${qrData.id}.svg`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = `qr-${qrData.id}.svg`;
+    a.click();
+    URL.revokeObjectURL(href);
   };
 
-  const downloadPNG = async () => {
-    if (!qrRef.current) return;
-
+  const downloadPNG = () => {
+    if (!qrRef.current || !qrData) return;
     const svg = qrRef.current.querySelector('svg');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    if (!svg) return;
     const data = new XMLSerializer().serializeToString(svg);
     const img = new Image();
-
+    const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
     img.onload = () => {
+      const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      
-      const pngUrl = canvas.toDataURL('image/png');
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pngUrl;
-      downloadLink.download = `qr-code-${qrData.id}.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `qr-${qrData.id}.png`;
+      a.click();
     };
-
-    const svgBlob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-    img.src = url;
+    img.src = URL.createObjectURL(blob);
   };
 
   return (
-    <Card className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Generador de QR</h2>
-      
-      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
-      
-      <Input
-        type="url"
-        placeholder="Ingresa la URL"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        className="mb-4"
-      />
-      
-      <Button 
-        onClick={generateQR} 
-        disabled={loading}
-        className="w-full"
-      >
-        {loading ? 'Generando...' : 'Generar QR'}
-      </Button>
-      
-      {qrData && (
-        <div className="mt-6 text-center" ref={qrRef}>
-          <div className="flex justify-center mb-4">
-            <QRCodeSVG 
-              value={`${qrData.url}`} 
-              size={200}
-              includeMargin={true}
-              level="H" // Mayor nivel de corrección de errores
-              fgColor="#5f2132" // Color personalizado (azul indigo)
-              bgColor="#ffffff"
-            />
+    <div className="max-w-lg mx-auto">
+      <Card className="p-8 border border-[var(--border)] bg-[var(--bg-card)] shadow-sm">
+        <h1 className="text-xl font-semibold text-[var(--text)] mb-1">Nuevo código QR</h1>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
+          La URL se guarda y cada escaneo se contabiliza.
+        </p>
+
+        {!user && (
+          <p className="text-sm text-[var(--text-muted)] mb-4 p-3 rounded-lg bg-amber-50 text-amber-800">
+            Inicia sesión para generar y guardar códigos QR.
+          </p>
+        )}
+
+        {error && (
+          <p className="text-sm text-red-600 mb-4 p-3 rounded-lg bg-red-50">{error}</p>
+        )}
+
+        <Input
+          type="url"
+          placeholder="https://ejemplo.com"
+          value={url}
+          onValueChange={setUrl}
+          className="mb-4"
+          size="md"
+          variant="bordered"
+          isDisabled={!user}
+        />
+
+        <Button
+          color="primary"
+          onPress={generateQR}
+          isLoading={loading}
+          isDisabled={!user}
+          className="w-full font-medium"
+        >
+          Generar QR
+        </Button>
+
+        {qrData && (
+          <div className="mt-8 pt-6 border-t border-[var(--border)] text-center" ref={qrRef}>
+            <div className="inline-flex p-4 bg-white rounded-xl border border-[var(--border)]">
+              <QRCodeSVG
+                value={qrData.url}
+                size={200}
+                includeMargin
+                level="H"
+                fgColor="#111827"
+                bgColor="#ffffff"
+              />
+            </div>
+            <p className="text-sm text-[var(--text-muted)] mt-3">
+              Escaneos: {qrData.scanCount}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    variant="bordered"
+                    size="sm"
+                    startContent={<HiDownload className="w-4 h-4" />}
+                  >
+                    Descargar
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu onAction={(key) => (key === 'png' ? downloadPNG() : downloadSVG())}>
+                  <DropdownItem key="png" startContent={<HiOutlinePhotograph className="w-4 h-4" />}>
+                    PNG
+                  </DropdownItem>
+                  <DropdownItem key="svg" startContent={<HiOutlineCode className="w-4 h-4" />}>
+                    SVG
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-4 break-all">
+              {qrData.url}
+            </p>
           </div>
-          <p className="text-sm text-gray-600">Escaneos: 0</p>
-          
-          <Dropdown>
-            <DropdownTrigger>
-              <Button 
-                variant="outline" 
-                className="mt-2 flex items-center mx-auto"
-              >
-                <HiDownload className="mr-2" />
-                Descargar QR
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem 
-                key="png" 
-                startContent={<HiOutlinePhotograph />}
-                onClick={downloadPNG}
-              >
-                Descargar como PNG
-              </DropdownItem>
-              <DropdownItem 
-                key="svg" 
-                startContent={<HiOutlineCode />}
-                onClick={downloadSVG}
-              >
-                Descargar como SVG
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-          
-          <div className="mt-4 text-xs text-gray-500">
-            <p>ID del QR: {qrData.id}</p>
-          </div>
-        </div>
-      )}
-    </Card>
+        )}
+      </Card>
+    </div>
   );
 };
 

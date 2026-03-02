@@ -6,13 +6,13 @@ import { getAuth } from "firebase/auth";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCJ42pYzbzuQqxyVAZCGEmByT7g1zg_eD8",
-  authDomain: "qr-trac-c72b3.firebaseapp.com",
-  projectId: "qr-trac-c72b3",
-  storageBucket: "qr-trac-c72b3.firebasestorage.app",
-  messagingSenderId: "1004399470045",
-  appId: "1:1004399470045:web:7ff62a09c0dd4e7f590234",
-  measurementId: "G-S9HCV389KW"
+  apiKey: "AIzaSyBFcgk1QpYMxytV7XF2Fna-nr4xmqeFeFY",
+  authDomain: "archipielablog.firebaseapp.com",
+  projectId: "archipielablog",
+  storageBucket: "archipielablog.firebasestorage.app",
+  messagingSenderId: "638920556361",
+  appId: "1:638920556361:web:1fb78f9876b23decfde498",
+  measurementId: "G-Z4JXL4QBGK"
 };
 
 const app = initializeApp(firebaseConfig);

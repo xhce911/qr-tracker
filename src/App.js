@@ -24,9 +24,9 @@ function App() {
   return (
     <HeroUIProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--bg-page)]">
           <Navbar onLoginClick={() => setAuthModalOpen(true)} />
-          <div className="container mx-auto py-8 px-4">
+          <div className="container mx-auto py-8 px-4 max-w-6xl">
             <Routes>
               <Route path="/" element={<QRGenerator user={user} />} />
               <Route 

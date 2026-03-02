@@ -8,8 +8,8 @@ import {
   Button,
   Input,
   Divider,
+  Tabs,
   Tab,
-  Tabs
 } from '@heroui/react';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../hooks/useAuth';
@@ -26,7 +26,6 @@ const AuthModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       if (activeTab === 'login') {
         await login(email, password);
@@ -35,81 +34,72 @@ const AuthModal = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setError('');
     try {
       await loginWithGoogle();
       onClose();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error con Google');
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalContent>
-        <ModalHeader>
-          {activeTab === 'login' ? 'Iniciar sesión' : 'Registrarse'}
+    <Modal isOpen={isOpen} onOpenChange={(open) => !open && onClose()} placement="center">
+      <ModalContent className="border border-[var(--border)]">
+        <ModalHeader className="flex flex-col gap-1 text-[var(--text)]">
+          {activeTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
         </ModalHeader>
         <ModalBody>
-          <Tabs activeTab={activeTab} onChange={setActiveTab}>
-            <Tab label="Iniciar sesión" value="login" />
-            <Tab label="Crear cuenta" value="register" />
+          <Tabs selectedKey={activeTab} onSelectionChange={setActiveTab} size="sm">
+            <Tab key="login" title="Iniciar sesión" />
+            <Tab key="register" title="Crear cuenta" />
           </Tabs>
 
-          <form onSubmit={handleSubmit} className="mt-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {error && (
-              <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
-                {error}
-              </div>
+              <p className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">{error}</p>
             )}
-
             <Input
               type="email"
-              label="Correo electrónico"
+              label="Correo"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mb-4"
-              required
+              onValueChange={setEmail}
+              variant="bordered"
+              isRequired
             />
-
             <Input
               type="password"
               label="Contraseña"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mb-6"
-              required
+              onValueChange={setPassword}
+              variant="bordered"
+              isRequired
             />
-
-            <Button 
-              type="submit" 
-              color="primary" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Procesando...' : activeTab === 'login' ? 'Iniciar sesión' : 'Registrarse'}
+            <Button type="submit" color="primary" className="w-full" isLoading={loading}>
+              {activeTab === 'login' ? 'Entrar' : 'Registrarse'}
             </Button>
           </form>
 
-          <Divider className="my-6">o</Divider>
+          <Divider className="my-4" />
 
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center justify-center"
-            onClick={handleGoogleLogin}
+          <Button
+            variant="bordered"
+            className="w-full"
+            startContent={<FcGoogle className="w-5 h-5" />}
+            onPress={handleGoogleLogin}
           >
-            <FcGoogle className="mr-2 text-lg" />
             Continuar con Google
           </Button>
         </ModalBody>
         <ModalFooter>
-          <Button variant="light" onClick={onClose}>
+          <Button variant="light" onPress={onClose}>
             Cerrar
           </Button>
         </ModalFooter>

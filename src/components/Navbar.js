@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
+import {
   Navbar as HeroNavbar,
   NavbarBrand,
   NavbarContent,
@@ -9,34 +9,40 @@ import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
+  Button,
 } from '@heroui/react';
-import {Button} from "@heroui/button";
-import { HiOutlineQrcode, HiOutlineHome, HiOutlineChartBar, HiOutlineUser, HiOutlineLogout } from 'react-icons/hi';
-import { useAuth } from '../hooks/useAuth'; // Asumiremos que crearemos este hook
+import { HiOutlineQrcode, HiOutlineHome, HiOutlineChartBar, HiOutlineLogout } from 'react-icons/hi';
+import { useAuth } from '../hooks/useAuth';
 
-const Navbar = () => {
-  const { user, logout } = useAuth(); // Hook para manejar autenticación
+const Navbar = ({ onLoginClick }) => {
+  const { user, logout } = useAuth();
 
   return (
-    <HeroNavbar className="shadow-sm bg-white">
+    <HeroNavbar className="bg-white/80 backdrop-blur border-b border-[var(--border)]">
       <NavbarBrand>
-        <Link to="/" className="flex items-center">
-          <HiOutlineQrcode className="w-8 h-8 text-indigo-600" />
-          <span className="ml-2 text-xl font-bold text-gray-800">QR Tracker</span>
+        <Link to="/" className="flex items-center gap-2 text-[var(--text)] hover:opacity-80 transition-opacity">
+          <HiOutlineQrcode className="w-7 h-7 text-[var(--accent)]" />
+          <span className="font-semibold text-lg">QR Tracker</span>
         </Link>
       </NavbarBrand>
 
-      <NavbarContent justify="center">
+      <NavbarContent justify="center" className="gap-6">
         <NavbarItem>
-          <Link to="/" className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
-            <HiOutlineHome className="mr-1" />
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-sm font-medium"
+          >
+            <HiOutlineHome className="w-4 h-4" />
             Generador
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
-            <HiOutlineChartBar className="mr-1" />
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-sm font-medium"
+          >
+            <HiOutlineChartBar className="w-4 h-4" />
             Dashboard
           </Link>
         </NavbarItem>
@@ -44,42 +50,35 @@ const Navbar = () => {
 
       <NavbarContent justify="end">
         {user ? (
-          <Dropdown>
+          <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <Avatar 
-                src={user.photoURL} 
-                alt={user.displayName} 
-                className="cursor-pointer"
+              <Avatar
+                src={user.photoURL}
+                alt={user.displayName || 'Usuario'}
+                name={user.displayName || user.email?.slice(0, 1)}
+                className="cursor-pointer w-9 h-9"
               />
             </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem key="profile" className="flex items-center">
-                <HiOutlineUser className="mr-2" />
-                Perfil
-              </DropdownItem>
-              <DropdownItem 
-                key="logout" 
-                className="flex items-center text-red-600"
-                onClick={logout}
+            <DropdownMenu aria-label="Menú usuario">
+              <DropdownItem
+                key="logout"
+                startContent={<HiOutlineLogout className="w-4 h-4" />}
+                className="text-red-600"
+                onPress={logout}
               >
-                <HiOutlineLogout className="mr-2" />
                 Cerrar sesión
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
         ) : (
-          <>
-            <NavbarItem>
-              <Link to="/login">
-                <Button variant="light">Iniciar sesión</Button>
-              </Link>
-            </NavbarItem>
-            <NavbarItem>
-              <Link to="/register">
-                <Button color="primary">Registrarse</Button>
-              </Link>
-            </NavbarItem>
-          </>
+          <Button
+            variant="flat"
+            color="primary"
+            size="sm"
+            onPress={onLoginClick}
+          >
+            Iniciar sesión
+          </Button>
         )}
       </NavbarContent>
     </HeroNavbar>
