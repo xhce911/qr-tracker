@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Button, Input, Card, Tooltip } from '@heroui/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Link } from 'react-router-dom';
 import {
   Dropdown,
   DropdownTrigger,
@@ -59,6 +60,26 @@ const QRGenerator = ({ user }) => {
   const [copiedShort, setCopiedShort] = useState(false);
   const qrRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const getEmptyFormData = (type) => ({
+    url: '',
+    text: '',
+    emailTo: '',
+    emailSubject: '',
+    emailBody: '',
+    phone: '',
+    smsPhone: '',
+    smsMessage: '',
+    wifiSsid: '',
+    wifiPassword: '',
+    wifiEncryption: 'WPA',
+  });
+
+  const handleTypeChange = (type) => {
+    setQrType(type);
+    setFormData(getEmptyFormData(type));
+    setError('');
+  };
 
   const copyToClipboard = async (text) => {
     try {
@@ -197,7 +218,12 @@ const QRGenerator = ({ user }) => {
         shortUrl: `${window.location.origin}/s/${shortCode}`,
         type: qrType,
         payload: payload.qrPayload,
+        logo: logo,
+        logoSize: logoSize,
       });
+      setFormData(getEmptyFormData(qrType));
+      setLogo(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       setError('Error al generar el QR: ' + err.message);
     } finally {
@@ -462,7 +488,7 @@ const QRGenerator = ({ user }) => {
               selectedKeys={new Set([qrType])}
               onSelectionChange={(keys) => {
                 const val = Array.from(keys)[0];
-                if (val) setQrType(val);
+                if (val) handleTypeChange(val);
               }}
             >
               {QR_TYPES.map((t) => {
@@ -558,13 +584,13 @@ const QRGenerator = ({ user }) => {
                 value={qrData.scanUrl}
                 size={200}
                 includeMargin
-                level={logo ? 'H' : 'M'}
+                level={qrData.logo ? 'H' : 'M'}
                 fgColor="#111827"
                 bgColor="#ffffff"
-                imageSettings={logo ? {
-                  src: logo,
-                  height: logoSize,
-                  width: logoSize,
+                imageSettings={qrData.logo ? {
+                  src: qrData.logo,
+                  height: qrData.logoSize,
+                  width: qrData.logoSize,
                   excavate: true,
                   opacity: 1,
                 } : undefined}
@@ -598,6 +624,22 @@ const QRGenerator = ({ user }) => {
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>
+              <Button
+                variant="bordered"
+                size="sm"
+                onPress={() => { setQrData(null); setError(''); }}
+              >
+                Generar otro QR
+              </Button>
+              <Button
+                as={Link}
+                to="/dashboard"
+                variant="flat"
+                size="sm"
+                color="primary"
+              >
+                Ver Dashboard
+              </Button>
             </div>
             <div className="mt-4 space-y-1">
               <div className="flex items-center gap-2 justify-center">
