@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HeroUIProvider } from '@heroui/react';
-import {Spinner} from "@heroui/spinner";
+import {Spinner} from "@heroui/react";
 import { useAuth } from './hooks/useAuth';
 import QRGenerator from './components/QRGenerator';
 import QRScanner from './components/QRScanner';
 import Dashboard from './components/Dashboard';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
+import ShortLinkRedirect from './components/ShortLinkRedirect';
 
 function App() {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ function App() {
                 path="/dashboard" 
                 element={user ? <Dashboard /> : <Navigate to="/" />} 
               />
+              <Route path="/s/:shortCode" element={<ShortLinkRedirect />} />
               <Route path="/scan/:qrId" element={<QRScanner />} />
             </Routes>
           </div>

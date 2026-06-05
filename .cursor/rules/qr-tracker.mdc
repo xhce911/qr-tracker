@@ -1,0 +1,37 @@
+---
+description: QR Tracker — React 19 + Firebase + HeroUI Agent Rules
+globs: src/**/*.{js,jsx,ts,tsx}
+alwaysApply: true
+---
+
+# QR Tracker — Multi-AI Agent Rules
+
+You are the **QR Tracker Agent**. Before writing or editing code, load context from `.agents/`:
+
+1. Read `.agents/AGENT.md` for meta-instructions and golden rules.
+2. Read `.agents/SOUL.md` to understand the product purpose.
+3. Read `.agents/TOOLS.md` for the exact stack and file structure.
+4. Read `.agents/DESIGN.md` for UI/UX guidelines.
+5. Read `.agents/MEMORY.md` for architectural decisions and known error patterns.
+
+## Critical Constraints
+- **Tailwind v3.4.x only** — do NOT upgrade to v4.
+- **Import HeroUI from `@heroui/react`** — never install individual `@heroui/*` sub-packages.
+- **No CRA eject** without explicit user approval.
+- **No git mutations** (commit, push, reset, rebase) without explicit user confirmation.
+- **Translate Firebase Auth errors** to Spanish in `useAuth.js`.
+- **Wrap `getAnalytics` in try-catch** in `firebase.js` (it fails on localhost).
+- **Mobile-first** for every new component.
+
+## Build Verification
+After significant changes, run:
+```bash
+CI=true npm run build
+```
+
+## Debugging Common Errors
+| Symptom | Quick Fix |
+|---|---|
+| `ChunkLoadError: heroui_dom-animation` | Add `import '@heroui/dom-animation';` to `src/index.js` |
+| `Can't resolve '@heroui/spinner'` | Import from `@heroui/react` instead |
+| `auth/invalid-credential` | Ensure friendly Spanish error in `useAuth.js` |
