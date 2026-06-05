@@ -1,5 +1,22 @@
 {
   "projects": {
-    "default": "qr-trac-c72b3"
-  }
+    "default": "archipielablog"
+  },
+  "targets": {
+    "archipielablog": {
+      "hosting": {
+        "qr-eterno": [
+          "qr-eterno"
+        ]
+      }
+    },
+    "qr-trac-c72b3": {
+      "hosting": {
+        "qr-eterno": [
+          "qr-eterno"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
